@@ -10,6 +10,7 @@ import com.bumptech.glide.Registry;
 import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.EncodeStrategy;
 import com.bumptech.glide.load.Key;
+import com.bumptech.glide.load.Option;
 import com.bumptech.glide.load.Options;
 import com.bumptech.glide.load.ResourceEncoder;
 import com.bumptech.glide.load.Transformation;
@@ -22,6 +23,7 @@ import com.bumptech.glide.util.Synthetic;
 import com.bumptech.glide.util.pool.FactoryPools.Poolable;
 import com.bumptech.glide.util.pool.GlideTrace;
 import com.bumptech.glide.util.pool.StateVerifier;
+import com.xiaopeng.jingwei.lib.asmkit.glidehook.GlideDataProxy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -414,6 +416,7 @@ class DecodeJob<R>
   }
 
   private void decodeFromRetrievedData() {
+    GlideDataProxy.proxyOnDataFetcherReady(loadKey.hashCode(), currentSourceKey, currentData, startFetchTime);
     if (Log.isLoggable(TAG, Log.VERBOSE)) {
       logWithTimeAndKey(
           "Retrieved data",
@@ -503,6 +506,8 @@ class DecodeJob<R>
   private Options getOptionsWithHardwareConfig(DataSource dataSource) {
     Options options = this.options;
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+      int requestId = GlideDataProxy.proxyGetRequestIdByEngineKey(loadKey.hashCode());
+      options.set(Option.memory("requestId", 0),requestId);
       return options;
     }
 
@@ -513,6 +518,9 @@ class DecodeJob<R>
     // If allow hardware config is defined, we can use it if it's set to false or if it's safe to
     // use the hardware config for the request.
     if (isHardwareConfigAllowed != null && (!isHardwareConfigAllowed || isHardwareConfigSafe)) {
+      Integer requestId = GlideDataProxy.proxyGetRequestIdByEngineKey(loadKey.hashCode());
+      options.set(Option.memory("requestId", 0), requestId);
+
       return options;
     }
 
@@ -521,7 +529,8 @@ class DecodeJob<R>
     options = new Options();
     options.putAll(this.options);
     options.set(Downsampler.ALLOW_HARDWARE_CONFIG, isHardwareConfigSafe);
-
+    Integer requestId = GlideDataProxy.proxyGetRequestIdByEngineKey(loadKey.hashCode());
+    options.set(Option.memory("requestId", 0), requestId);
     return options;
   }
 

@@ -24,6 +24,7 @@ import com.bumptech.glide.util.LogTime;
 import com.bumptech.glide.util.Util;
 import com.bumptech.glide.util.pool.GlideTrace;
 import com.bumptech.glide.util.pool.StateVerifier;
+import com.xiaopeng.jingwei.lib.asmkit.glidehook.GlideDataProxy;
 import java.util.List;
 import java.util.concurrent.Executor;
 
@@ -150,6 +151,7 @@ public final class SingleRequest<R> implements Request, SizeReadyCallback, Resou
       Engine engine,
       TransitionFactory<? super R> animationFactory,
       Executor callbackExecutor) {
+    GlideDataProxy.proxyRequestListener(requestListeners);
     return new SingleRequest<>(
         context,
         glideContext,
@@ -456,6 +458,7 @@ public final class SingleRequest<R> implements Request, SizeReadyCallback, Resou
         return;
       }
       status = Status.RUNNING;
+//      GlideDataProxy.proxyPutResourceCallbackMapToRequestId(this, this.hashCode());
 
       float sizeMultiplier = requestOptions.getSizeMultiplier();
       this.width = maybeApplySizeMultiplier(width, sizeMultiplier);
@@ -619,6 +622,7 @@ public final class SingleRequest<R> implements Request, SizeReadyCallback, Resou
     // We must call isFirstReadyResource before setting status.
     boolean isFirstResource = isFirstReadyResource();
     status = Status.COMPLETE;
+    GlideDataProxy.proxyOnResourceReady(SingleRequest.this.hashCode(), result, model, target, width, height, dataSource, startTime);
     this.resource = resource;
 
     if (glideContext.getLogLevel() <= Log.DEBUG) {
@@ -691,6 +695,7 @@ public final class SingleRequest<R> implements Request, SizeReadyCallback, Resou
 
       loadStatus = null;
       status = Status.FAILED;
+      GlideDataProxy.proxyOnLoadFailed(this.hashCode(), model, target, width, height, e, startTime);
 
       isCallingCallbacks = true;
       try {

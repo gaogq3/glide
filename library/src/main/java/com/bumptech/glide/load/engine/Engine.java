@@ -22,6 +22,7 @@ import com.bumptech.glide.util.LogTime;
 import com.bumptech.glide.util.Preconditions;
 import com.bumptech.glide.util.Synthetic;
 import com.bumptech.glide.util.pool.FactoryPools;
+import com.xiaopeng.jingwei.lib.asmkit.glidehook.GlideDataProxy;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
@@ -245,6 +246,7 @@ public class Engine
       EngineKey key,
       long startTime) {
 
+    GlideDataProxy.proxyPutEngineKeyMapToResourceCallback(key.hashCode(), cb);
     EngineJob<?> current = jobs.get(key, onlyRetrieveFromCache);
     if (current != null) {
       current.addCallback(cb, callbackExecutor);
