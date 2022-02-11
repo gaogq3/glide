@@ -1,4 +1,4 @@
-package com.xiaopeng.jingwei.lib.asmkit.glidehook;
+package com.xiaopeng.jingwei.plugin.asmkit.glidehook;
 
 import androidx.annotation.Nullable;
 import com.bumptech.glide.load.DataSource;
@@ -34,7 +34,7 @@ public class GlideRequestListener<R> implements RequestListener<R> {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+//            e.printStackTrace();
         }
         return false;
     }

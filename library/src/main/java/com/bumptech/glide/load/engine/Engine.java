@@ -22,7 +22,7 @@ import com.bumptech.glide.util.LogTime;
 import com.bumptech.glide.util.Preconditions;
 import com.bumptech.glide.util.Synthetic;
 import com.bumptech.glide.util.pool.FactoryPools;
-import com.xiaopeng.jingwei.lib.asmkit.glidehook.GlideDataProxy;
+import com.xiaopeng.jingwei.plugin.asmkit.glidehook.GlideDataProxy;
 import java.util.Map;
 import java.util.concurrent.Executor;
 

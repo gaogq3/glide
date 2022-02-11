@@ -1,17 +1,16 @@
-package com.xiaopeng.jingwei.lib.asmkit.glidehook;
+package com.xiaopeng.jingwei.plugin.asmkit.glidehook;
 
+import android.util.SparseArray;
 import com.bumptech.glide.load.DataSource;
-import com.xiaopeng.jingwei.plugin.asmkit.dataproxy.ApmDataProxy;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class GlideDataManager {
     private static final String TAG = "GlideDataManager";
-    public static ConcurrentHashMap<Integer, com.xiaopeng.jingwei.plugin.asmkit.glidehook.GlideImageInfo> imageInfoMap = new ConcurrentHashMap<>();
+    public static SparseArray<GlideImageInfo> imageInfoMap = new SparseArray<>(64);
 
     /**
      * 保存“获取图片数据流过程中”产生的数据
@@ -37,18 +36,13 @@ public class GlideDataManager {
         }
 
 
-        com.xiaopeng.jingwei.plugin.asmkit.glidehook.GlideImageInfo imageInfo;
-        if (imageInfoMap.containsKey(requestId)) {
-            imageInfo = imageInfoMap.get(requestId);
-            if (imageInfo == null) {
-                imageInfo = new com.xiaopeng.jingwei.plugin.asmkit.glidehook.GlideImageInfo();
-            }
-            setInfoWhenGettingImage(imageInfo, imageSize, downloadCost);
-        } else {
-            imageInfo = new com.xiaopeng.jingwei.plugin.asmkit.glidehook.GlideImageInfo();
-            setInfoWhenGettingImage(imageInfo, imageSize, downloadCost);
+        GlideImageInfo imageInfo = imageInfoMap.get(requestId);
+        if (imageInfo == null) {
+            imageInfo = new GlideImageInfo();
             imageInfoMap.put(requestId, imageInfo);
         }
+        setInfoWhenGettingImage(imageInfo, imageSize, downloadCost);
+
         if (imageSize == -1) {
             imageInfo.error_message = data != null ? data.toString() : "empty Data";
         }
@@ -71,26 +65,23 @@ public class GlideDataManager {
                                                 DataSource dataSource,
                                                 double totalCost) {
         URL url = null;
-        com.xiaopeng.jingwei.plugin.asmkit.glidehook.GlideImageInfo imageInfo;
+        GlideImageInfo imageInfo;
         try {
             url = new URL(requestUrlStr);
         } catch (MalformedURLException e) {
-
+//            e.printStackTrace();
         }
 
-        if (imageInfoMap.containsKey(requestId)) {
-            imageInfo = imageInfoMap.remove(requestId);
-            if (imageInfo == null) {
-                imageInfo = new com.xiaopeng.jingwei.plugin.asmkit.glidehook.GlideImageInfo();
-            }
-            setRealRequestInfo(imageInfo, url, requestUrlStr, width, height, dataSource, totalCost);
+        imageInfo = imageInfoMap.get(requestId);
+        if (imageInfo != null) {
+            imageInfoMap.delete(requestId);
         } else {
-            imageInfo = new com.xiaopeng.jingwei.plugin.asmkit.glidehook.GlideImageInfo();
-            setRealRequestInfo(imageInfo, url, requestUrlStr, width, height, dataSource, totalCost);
-            imageInfoMap.put(requestId, imageInfo);
+            imageInfo = new GlideImageInfo();
         }
+        setRealRequestInfo(imageInfo, url, requestUrlStr, width, height, dataSource, totalCost);
 
-        ApmDataProxy.getProxy().onGlideDataReport(imageInfo);
+//        Log.e(TAG, "imageInfoMap size = " + imageInfoMap.size());
+//        ApmDataProxy.getProxy().onGlideDataReport(imageInfo);
     }
 
     /**
@@ -110,26 +101,23 @@ public class GlideDataManager {
                                                     String errorMsg,
                                                     double totalCost) {
         URL url = null;
-        com.xiaopeng.jingwei.plugin.asmkit.glidehook.GlideImageInfo imageInfo;
+        GlideImageInfo imageInfo;
         try {
             url = new URL(requestUrlStr);
         } catch (MalformedURLException e) {
-            e.printStackTrace();
+//            e.printStackTrace();
         }
 
-        if (imageInfoMap.containsKey(requestId)) {
-            imageInfo = imageInfoMap.remove(requestId);
-            if (imageInfo == null) {
-                imageInfo = new com.xiaopeng.jingwei.plugin.asmkit.glidehook.GlideImageInfo();
-            }
-            setFailRealRequestInfo(imageInfo, url, requestUrlStr, width, height, errorMsg, totalCost);
+        imageInfo = imageInfoMap.get(requestId);
+        if (imageInfo != null) {
+            imageInfoMap.delete(requestId);
         } else {
-            imageInfo = new com.xiaopeng.jingwei.plugin.asmkit.glidehook.GlideImageInfo();
-            setFailRealRequestInfo(imageInfo, url, requestUrlStr, width, height, errorMsg, totalCost);
-            imageInfoMap.put(requestId, imageInfo);
+            imageInfo = new GlideImageInfo();
         }
+        setFailRealRequestInfo(imageInfo, url, requestUrlStr, width, height, errorMsg, totalCost);
 
-        ApmDataProxy.getProxy().onGlideDataReport(imageInfo);
+//        Log.e(TAG, "imageInfoMap size = " + imageInfoMap.size());
+//        ApmDataProxy.getProxy().onGlideDataReport(imageInfo);
     }
 
 
@@ -152,26 +140,17 @@ public class GlideDataManager {
                                                       int realWidth,
                                                       int realHeight,
                                                       double decodeCost) {
-        if (!imageInfoMap.containsKey(requestId)) {
-            com.xiaopeng.jingwei.plugin.asmkit.glidehook.GlideImageInfo imageInfo = new com.xiaopeng.jingwei.plugin.asmkit.glidehook.GlideImageInfo();
-            imageInfo.setDecodeInfo(targetWidth,
-                    targetHeight,
-                    mineType,
-                    realWidth,
-                    realHeight,
-                    decodeCost);
+        GlideImageInfo imageInfo = imageInfoMap.get(requestId);
+        if (imageInfo == null) {
+            imageInfo = new GlideImageInfo();
             imageInfoMap.put(requestId, imageInfo);
-        } else {
-            com.xiaopeng.jingwei.plugin.asmkit.glidehook.GlideImageInfo imageInfo = imageInfoMap.get(requestId);
-            if (imageInfo != null) {
-                imageInfo.setDecodeInfo(targetWidth,
-                        targetHeight,
-                        mineType,
-                        realWidth,
-                        realHeight,
-                        decodeCost);
-            }
         }
+        imageInfo.setDecodeInfo(targetWidth,
+                targetHeight,
+                mineType,
+                realWidth,
+                realHeight,
+                decodeCost);
     }
 
 
@@ -186,8 +165,7 @@ public class GlideDataManager {
      * @param dataSource
      * @param totalCost
      */
-    private static void setRealRequestInfo(
-        com.xiaopeng.jingwei.plugin.asmkit.glidehook.GlideImageInfo info, URL url, String requestUrlStr, int width, int height, DataSource dataSource, double totalCost) {
+    private static void setRealRequestInfo(GlideImageInfo info, URL url, String requestUrlStr, int width, int height, DataSource dataSource, double totalCost) {
         if (info == null) {
             return;
         }
@@ -217,8 +195,7 @@ public class GlideDataManager {
      * @param errorMsg
      * @param totalCost
      */
-    private static void setFailRealRequestInfo(
-        com.xiaopeng.jingwei.plugin.asmkit.glidehook.GlideImageInfo info, URL url, String requestUrlStr, int width, int height, String errorMsg, double totalCost) {
+    private static void setFailRealRequestInfo(GlideImageInfo info, URL url, String requestUrlStr, int width, int height, String errorMsg, double totalCost) {
         if (info == null) {
             return;
         }
@@ -237,8 +214,7 @@ public class GlideDataManager {
         info.status = 0;
     }
 
-    private static void setInfoWhenGettingImage(
-        com.xiaopeng.jingwei.plugin.asmkit.glidehook.GlideImageInfo info, long imageSize, double downloadCost) {
+    private static void setInfoWhenGettingImage(GlideImageInfo info, long imageSize, double downloadCost) {
         if (info == null) {
             return;
         }

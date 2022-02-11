@@ -1,4 +1,4 @@
-package com.xiaopeng.jingwei.lib.asmkit.glidehook;
+package com.xiaopeng.jingwei.plugin.asmkit.glidehook;
 
 public class GlideImageInfo {
     public String host = "";

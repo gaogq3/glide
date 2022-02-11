@@ -24,7 +24,7 @@ import com.bumptech.glide.util.LogTime;
 import com.bumptech.glide.util.Util;
 import com.bumptech.glide.util.pool.GlideTrace;
 import com.bumptech.glide.util.pool.StateVerifier;
-import com.xiaopeng.jingwei.lib.asmkit.glidehook.GlideDataProxy;
+import com.xiaopeng.jingwei.plugin.asmkit.glidehook.GlideDataProxy;
 import java.util.List;
 import java.util.concurrent.Executor;
 

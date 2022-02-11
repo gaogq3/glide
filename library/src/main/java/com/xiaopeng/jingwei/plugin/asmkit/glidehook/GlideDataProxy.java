@@ -1,27 +1,26 @@
-package com.xiaopeng.jingwei.lib.asmkit.glidehook;
+package com.xiaopeng.jingwei.plugin.asmkit.glidehook;
 
 import android.annotation.TargetApi;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
+import android.util.Log;
+import android.util.SparseIntArray;
 import androidx.annotation.Nullable;
 import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.Key;
 import com.bumptech.glide.load.engine.GlideException;
-import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.ResourceCallback;
-import com.bumptech.glide.request.SingleRequest;
 import com.bumptech.glide.request.target.Target;
 import com.bumptech.glide.util.LogTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+
 
 public class GlideDataProxy {
 
     private static final String TAG = "GlideProxy";
-    public static ConcurrentHashMap<Integer, Integer> engineKeyCallBackMap = new ConcurrentHashMap<>(64);
-    public static ConcurrentHashMap<Integer, Integer> imageReaderRequestIdMap = new ConcurrentHashMap<>(64);
+    //    public static ConcurrentHashMap<Integer, Integer> callBackRequestIdMap = new ConcurrentHashMap<>(64);
+    public static SparseIntArray engineKeyCallBackMap = new SparseIntArray(64);
+    public static SparseIntArray optionsRequestIdMap = new SparseIntArray(64);
 
 
     /**
@@ -30,7 +29,7 @@ public class GlideDataProxy {
      *                          所这个接口的hashCode = SingleRequest对象的hashCode,即requestId
      */
     public static void proxyPutEngineKeyMapToResourceCallback(Integer engineKeyHashCode, ResourceCallback resourceCallback) {
-//        Log.d(TAG, String.format("engineKeyHashCode = %d , requestId = % d", engineKeyHashCode, resourceCallback.hashCode()));
+        Log.d(TAG, String.format("engineKeyHashCode = %d , requestId = % d", engineKeyHashCode, resourceCallback.hashCode()));
         engineKeyCallBackMap.put(engineKeyHashCode, resourceCallback.hashCode());
     }
 
@@ -41,8 +40,10 @@ public class GlideDataProxy {
      * @param data
      */
     public static void proxyOnDataFetcherReady(Integer engineKeyHashCode, Key sourceKey, Object data, long startFetchTime) {
+        Log.d(TAG, "proxyOnDataFetcherReady");
         Integer callBackHashCode = engineKeyCallBackMap.get(engineKeyHashCode);
-        GlideDataManager.saveInfoByRequestIdWhenGettingImage(callBackHashCode == null ? 0 : callBackHashCode,
+        GlideDataManager
+            .saveInfoByRequestIdWhenGettingImage(callBackHashCode == null ? 0 : callBackHashCode,
                 data,
                 com.bumptech.glide.util.LogTime.getElapsedMillis(startFetchTime));
     }
@@ -54,9 +55,10 @@ public class GlideDataProxy {
      * @return requestId/callbackHashCode
      */
     public static int proxyGetRequestIdByEngineKey(Integer engineKeyHashCode) {
-//        Log.d(TAG, String.format("proxyGetRequestIdByEngineKey = %d", engineKeyHashCode));
-        Integer callBackHashCode = engineKeyCallBackMap.remove(engineKeyHashCode);
-        return callBackHashCode == null ? 0 : callBackHashCode;
+        Log.d(TAG, String.format("proxyGetRequestIdByEngineKey = %d", engineKeyHashCode));
+        int callBackHashCode = engineKeyCallBackMap.get(engineKeyHashCode , 0);
+        engineKeyCallBackMap.delete(engineKeyHashCode);
+        return callBackHashCode;
     }
 
     /**
@@ -77,7 +79,7 @@ public class GlideDataProxy {
                                                 int requestHeight,
                                                 DataSource dataSource,
                                                 long startTime) {
-//        Log.d(TAG, "proxyOnResourceReady: requestId = " + requestId);
+        Log.d(TAG, "proxyOnResourceReady: requestId = " + requestId);
 //        Bitmap bitmap = null;
 //        if (resource instanceof Bitmap) {
 //            bitmap = (Bitmap) resource;
@@ -89,7 +91,8 @@ public class GlideDataProxy {
         if (resource == null) {
             return;
         }
-        GlideDataManager.saveImageInfoByRequestId(requestId, model != null ? model.toString() : "url is null", requestWidth, requestHeight, dataSource, com.bumptech.glide.util.LogTime.getElapsedMillis(startTime));
+        GlideDataManager
+            .saveImageInfoByRequestId(requestId, model != null ? model.toString() : "url is null", requestWidth, requestHeight, dataSource, com.bumptech.glide.util.LogTime.getElapsedMillis(startTime));
 //
 //        Log.d(TAG, "Finished loading "
 //                + resource.getClass().getSimpleName()
@@ -121,7 +124,8 @@ public class GlideDataProxy {
                                              int requestWidth,
                                              int requestHeight,
                                              GlideException e, long startTime) {
-        GlideDataManager.saveFailImageInfoByRequestId(requestId, model != null ? model.toString() : "url is null", requestWidth, requestHeight, e.toString(), com.bumptech.glide.util.LogTime.getElapsedMillis(startTime));
+        GlideDataManager
+            .saveFailImageInfoByRequestId(requestId, model != null ? model.toString() : "url is null", requestWidth, requestHeight, e.toString(), com.bumptech.glide.util.LogTime.getElapsedMillis(startTime));
     }
 
     /**
@@ -130,7 +134,7 @@ public class GlideDataProxy {
      * @param singleRequest
      */
     public static void proxyRequestListener(Object singleRequest) {
-//        Log.d(TAG, "proxyRequestListener: ");
+        Log.d(TAG, "proxyRequestListener: ");
 //        try {
 //            List<RequestListener> requestListeners = null;
 //            if (singleRequest instanceof SingleRequest) {
@@ -157,9 +161,9 @@ public class GlideDataProxy {
      * @param imageReaderHashCode
      * @param requestId
      */
-    public static void proxyPutImageReaderMapToRequestId(Integer imageReaderHashCode, Integer requestId) {
-//        Log.d(TAG, "proxyPutImageReaderMapToRequestId: ");
-        imageReaderRequestIdMap.put(imageReaderHashCode, requestId);
+    public static void proxyPutOptionsToRequestId(Integer optionsHashCode, Integer requestId) {
+        Log.d(TAG, "proxyPutImageReaderMapToRequestId: ");
+        optionsRequestIdMap.put(optionsHashCode, requestId);
     }
 
     /**
@@ -175,7 +179,7 @@ public class GlideDataProxy {
      * @param requestedHeight
      * @param startTime
      */
-    public static void proxySaveImageInfo(Integer imageReaderHashCode,
+    public static void proxySaveImageInfo(Integer optionsHashCode,
                                           int sourceWidth,
                                           int sourceHeight,
                                           String outMimeType,
@@ -184,8 +188,9 @@ public class GlideDataProxy {
                                           int requestedWidth,
                                           int requestedHeight,
                                           long startTime) {
-        Integer requestId = imageReaderRequestIdMap.remove(imageReaderHashCode);
-        if (requestId != null && requestId != 0) {
+        int requestId = optionsRequestIdMap.get(optionsHashCode, 0);
+        optionsRequestIdMap.delete(optionsHashCode);
+        if (requestId != 0) {
             GlideDataManager.saveImageDecodeInfoByRequestId(requestId,
                     requestedWidth,
                     requestedHeight,
@@ -232,7 +237,7 @@ public class GlideDataProxy {
      * {@link GlideDataProxy#proxyPutEngineKeyMapToResourceCallback(Integer, ResourceCallback)}
      */
     public static void proxyPutResourceCallbackMapToRequestId(ResourceCallback callback, Integer requestId) {
-//        Log.d(TAG, String.format("resourceCallback = %d ,RequestId = % d", callback.hashCode(), requestId));
+        Log.d(TAG, String.format("resourceCallback = %d ,RequestId = % d", callback.hashCode(), requestId));
 //        if (requestId != null) {
 //            callBackRequestIdMap.put(callback.hashCode(), requestId);
 //        }

@@ -28,7 +28,7 @@ import com.bumptech.glide.request.target.Target;
 import com.bumptech.glide.util.LogTime;
 import com.bumptech.glide.util.Preconditions;
 import com.bumptech.glide.util.Util;
-import com.xiaopeng.jingwei.lib.asmkit.glidehook.GlideDataProxy;
+import com.xiaopeng.jingwei.plugin.asmkit.glidehook.GlideDataProxy;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -270,8 +270,6 @@ public final class Downsampler {
       Options options,
       DecodeCallbacks callbacks)
       throws IOException {
-    Integer requestId = options.get(Option.memory("requestId", 0));
-    GlideDataProxy.proxyPutImageReaderMapToRequestId(imageReader.hashCode(),requestId);
     byte[] bytesForOptions = byteArrayPool.get(ArrayPool.STANDARD_BUFFER_SIZE_BYTES, byte[].class);
     BitmapFactory.Options bitmapFactoryOptions = getDefaultOptions();
     bitmapFactoryOptions.inTempStorage = bytesForOptions;
@@ -433,7 +431,7 @@ public final class Downsampler {
     callbacks.onDecodeComplete(bitmapPool, downsampled);
 
     GlideDataProxy.proxySaveImageInfo(
-        imageReader.hashCode(),
+        options.hashCode(),
         sourceWidth,
         sourceHeight,
         sourceMimeType,
