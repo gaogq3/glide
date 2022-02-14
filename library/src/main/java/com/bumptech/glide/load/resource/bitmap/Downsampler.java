@@ -270,6 +270,7 @@ public final class Downsampler {
       Options options,
       DecodeCallbacks callbacks)
       throws IOException {
+    GlideDataProxy.proxyPutImageReaderOptionsMap(imageReader.hashCode(), options.hashCode());
     byte[] bytesForOptions = byteArrayPool.get(ArrayPool.STANDARD_BUFFER_SIZE_BYTES, byte[].class);
     BitmapFactory.Options bitmapFactoryOptions = getDefaultOptions();
     bitmapFactoryOptions.inTempStorage = bytesForOptions;
@@ -431,7 +432,7 @@ public final class Downsampler {
     callbacks.onDecodeComplete(bitmapPool, downsampled);
 
     GlideDataProxy.proxySaveImageInfo(
-        options.hashCode(),
+        imageReader.hashCode(),
         sourceWidth,
         sourceHeight,
         sourceMimeType,

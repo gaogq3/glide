@@ -2,6 +2,7 @@ package com.xiaopeng.jingwei.plugin.asmkit.glidehook;
 
 import android.util.SparseArray;
 import com.bumptech.glide.load.DataSource;
+//import com.xiaopeng.jingwei.plugin.asmkit.dataproxy.ApmDataProxy;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -171,8 +172,9 @@ public class GlideDataManager {
         }
         if (url != null) {
             info.host = url.getHost();
-            info.original_path = url.getPath();
-            info.request_path = url.getPath();
+            String urlStr = url.toString();
+            info.original_path = urlStr.substring(urlStr.indexOf(url.getHost()) + url.getHost().length());
+            info.request_path = info.original_path;
         } else {
             info.original_path = requestUrlStr;
             info.request_path = requestUrlStr;
@@ -201,8 +203,9 @@ public class GlideDataManager {
         }
         if (url != null) {
             info.host = url.getHost();
-            info.original_path = url.getPath();
-            info.request_path = url.getPath();
+            String urlStr = url.toString();
+            info.original_path = urlStr.substring(urlStr.indexOf(url.getHost()) + url.getHost().length());
+            info.request_path = info.original_path;
         } else {
             info.original_path = requestUrlStr;
             info.request_path = requestUrlStr;

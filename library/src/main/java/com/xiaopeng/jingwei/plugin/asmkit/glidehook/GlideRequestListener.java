@@ -17,8 +17,8 @@ public class GlideRequestListener<R> implements RequestListener<R> {
 
     @Override
     public boolean onResourceReady(R resource, Object model, Target<R> target, DataSource dataSource, boolean isFirstResource) {
-        try {
-            if (isGlideApmOpen) {
+//        try {
+//            if (isGlideApmOpen) {
 //                Bitmap bitmap;
 //                if (resource instanceof Bitmap) {
 //                    bitmap = (Bitmap) resource;
@@ -31,11 +31,11 @@ public class GlideRequestListener<R> implements RequestListener<R> {
 //                    Log.v(TAG, "load finish url = " + model.toString() + ", DataSource = " + dataSource);
 ////                    GlideDataManager.saveImageInfo(model.toString(), imgSize, bitmap.getWidth(), bitmap.getHeight(), "Glide");
 //                }
-            }
-
-        } catch (Exception e) {
+//            }
+//
+//        } catch (Exception e) {
 //            e.printStackTrace();
-        }
+//        }
         return false;
     }
 
