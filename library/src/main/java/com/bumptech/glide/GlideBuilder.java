@@ -27,6 +27,8 @@ import com.bumptech.glide.manager.ConnectivityMonitorFactory;
 import com.bumptech.glide.manager.DefaultConnectivityMonitorFactory;
 import com.bumptech.glide.manager.RequestManagerRetriever;
 import com.bumptech.glide.manager.RequestManagerRetriever.RequestManagerFactory;
+import com.bumptech.glide.module.AppGlideModule;
+import com.bumptech.glide.module.GlideModule;
 import com.bumptech.glide.request.BaseRequestOptions;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.RequestOptions;
@@ -496,7 +498,10 @@ public final class GlideBuilder {
   }
 
   @NonNull
-  Glide build(@NonNull Context context) {
+  Glide build(
+      @NonNull Context context,
+      List<GlideModule> manifestModules,
+      AppGlideModule annotationGeneratedGlideModule) {
     if (sourceExecutor == null) {
       sourceExecutor = GlideExecutor.newSourceExecutor();
     }
@@ -572,6 +577,8 @@ public final class GlideBuilder {
         defaultRequestOptionsFactory,
         defaultTransitionOptions,
         defaultRequestListeners,
+        manifestModules,
+        annotationGeneratedGlideModule,
         experiments);
   }
 
@@ -593,4 +600,6 @@ public final class GlideBuilder {
 
   /** See {@link #setLogRequestOrigins(boolean)}. */
   public static final class LogRequestOrigins implements Experiment {}
+
+  static final class EnableLazyGlideRegistry implements Experiment {}
 }
