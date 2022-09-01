@@ -1,29 +1,21 @@
 apply plugin: 'com.android.library'
 
-repositories {
-  jcenter()
-}
-
 checkstyle {
     toolVersion = "6.6"
-}
-
-checkstyle {
     configFile = new File(projectDir, 'checkstyle.xml')
 }
 
 dependencies {
-    def junitVersion = hasProperty('JUNIT_VERSION') ? JUNIT_VERSION : '4.13.2';
-    testImplementation "junit:junit:${junitVersion}"
+    testImplementation "junit:junit:${JUNIT_VERSION}"
     testImplementation "com.google.truth:truth:${TRUTH_VERSION}"
 }
 
 android {
-    compileSdkVersion COMPILE_SDK_VERSION as int
+    compileSdk COMPILE_SDK_VERSION as int
 
     defaultConfig {
-        minSdkVersion MIN_SDK_VERSION as int
-        targetSdkVersion TARGET_SDK_VERSION as int
+        minSdk MIN_SDK_VERSION as int
+        targetSdk TARGET_SDK_VERSION as int
         versionName VERSION_NAME as String
         consumerProguardFiles 'proguard-rules.txt'
     }

@@ -314,7 +314,7 @@ class DecodeJob<R>
       currentGenerator = getNextGenerator();
 
       if (stage == Stage.SOURCE) {
-        reschedule();
+        reschedule(RunReason.SWITCH_TO_SOURCE_SERVICE);
         return;
       }
     }
@@ -370,10 +370,16 @@ class DecodeJob<R>
     }
   }
 
+  private void reschedule(RunReason runReason) {
+    this.runReason = runReason;
+    callback.reschedule(this);
+  }
+
+  // This is used by SourceGenerator to ask us to switch back to our thread. Internal methods in
+  // this class should call reschedule with a specific RunReason.
   @Override
   public void reschedule() {
-    runReason = RunReason.SWITCH_TO_SOURCE_SERVICE;
-    callback.reschedule(this);
+    reschedule(RunReason.SWITCH_TO_SOURCE_SERVICE);
   }
 
   @Override
@@ -387,8 +393,7 @@ class DecodeJob<R>
     this.isLoadingFromAlternateCacheKey = sourceKey != decodeHelper.getCacheKeys().get(0);
 
     if (Thread.currentThread() != currentThread) {
-      runReason = RunReason.DECODE_DATA;
-      callback.reschedule(this);
+      reschedule(RunReason.DECODE_DATA);
     } else {
       GlideTrace.beginSection("DecodeJob.decodeFromRetrievedData");
       try {
@@ -407,8 +412,7 @@ class DecodeJob<R>
     exception.setLoggingDetails(attemptedKey, dataSource, fetcher.getDataClass());
     throwables.add(exception);
     if (Thread.currentThread() != currentThread) {
-      runReason = RunReason.SWITCH_TO_SOURCE_SERVICE;
-      callback.reschedule(this);
+      reschedule(RunReason.SWITCH_TO_SOURCE_SERVICE);
     } else {
       runGenerators();
     }

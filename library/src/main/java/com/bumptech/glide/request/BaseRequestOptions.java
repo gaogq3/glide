@@ -28,6 +28,7 @@ import com.bumptech.glide.load.resource.bitmap.Downsampler;
 import com.bumptech.glide.load.resource.bitmap.DrawableTransformation;
 import com.bumptech.glide.load.resource.bitmap.FitCenter;
 import com.bumptech.glide.load.resource.bitmap.VideoDecoder;
+import com.bumptech.glide.load.resource.drawable.ResourceDrawableDecoder;
 import com.bumptech.glide.load.resource.gif.GifDrawable;
 import com.bumptech.glide.load.resource.gif.GifDrawableTransformation;
 import com.bumptech.glide.load.resource.gif.GifOptions;
@@ -180,6 +181,15 @@ public abstract class BaseRequestOptions<T extends BaseRequestOptions<T>> implem
 
   /**
    * If set to true, will only load an item if found in the cache, and will not fetch from source.
+   *
+   * <p>By 'cache' we mean both the in memory cache and both types of disk cache ({@link
+   * DiskCacheStrategy#DATA} and {@link DiskCacheStrategy#RESOURCE}). If this flag is set to {@code
+   * true} and the item is not in the memory cache, but it is in one of the disk caches, the load
+   * will complete asynchronously.
+   *
+   * <p>If you'd like to only load an item from the memory cache. You can call this method with
+   * {@code true} and also call {@link #diskCacheStrategy(DiskCacheStrategy)} with {@link
+   * DiskCacheStrategy#NONE}
    */
   @NonNull
   @CheckResult
@@ -396,18 +406,11 @@ public abstract class BaseRequestOptions<T extends BaseRequestOptions<T>> implem
 
   /**
    * Sets the {@link android.content.res.Resources.Theme} to apply when loading {@link Drawable}s
-   * for resource ids provided via {@link #error(int)}, {@link #placeholder(int)}, and {@link
-   * #fallback(Drawable)}.
+   * for resource ids, including those provided via {@link #error(int)}, {@link #placeholder(int)},
+   * and {@link #fallback(Drawable)}.
    *
-   * <p>The theme is <em>NOT</em> applied in the decoder that will attempt to decode a given
-   * resource id model on Glide's background threads. The theme is used exclusively on the main
-   * thread to obtain placeholder/error/fallback drawables to avoid leaking Activities.
-   *
-   * <p>If the {@link android.content.Context} of the {@link android.app.Fragment} or {@link
-   * android.app.Activity} used to start this load has a different {@link
-   * android.content.res.Resources.Theme}, the {@link android.content.res.Resources.Theme} provided
-   * here will override the {@link android.content.res.Resources.Theme} of the {@link
-   * android.content.Context}.
+   * <p>The {@link android.content.res.Resources.Theme} provided here will override the {@link
+   * android.content.res.Resources.Theme} of the application {@link android.content.Context}.
    *
    * @param theme The theme to use when loading Drawables.
    * @return this request builder.
@@ -418,11 +421,11 @@ public abstract class BaseRequestOptions<T extends BaseRequestOptions<T>> implem
     if (isAutoCloneEnabled) {
       return clone().theme(theme);
     }
-
+    // TODO(b/234614365): Allow the theme option to be null.
+    Preconditions.checkNotNull(theme);
     this.theme = theme;
     fields |= THEME;
-
-    return selfOrThrowIfLocked();
+    return set(ResourceDrawableDecoder.THEME, theme);
   }
 
   /**

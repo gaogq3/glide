@@ -526,14 +526,14 @@ public final class SingleRequest<R> implements Request, SizeReadyCallback, Resou
   }
 
   @GuardedBy("requestLock")
-  private void notifyLoadSuccess() {
+  private void notifyRequestCoordinatorLoadSucceeded() {
     if (requestCoordinator != null) {
       requestCoordinator.onRequestSuccess(this);
     }
   }
 
   @GuardedBy("requestLock")
-  private void notifyLoadFailed() {
+  private void notifyRequestCoordinatorLoadFailed() {
     if (requestCoordinator != null) {
       requestCoordinator.onRequestFailed(this);
     }
@@ -643,6 +643,8 @@ public final class SingleRequest<R> implements Request, SizeReadyCallback, Resou
               + " ms");
     }
 
+    notifyRequestCoordinatorLoadSucceeded();
+
     isCallingCallbacks = true;
     try {
       boolean anyListenerHandledUpdatingTarget = false;
@@ -664,7 +666,6 @@ public final class SingleRequest<R> implements Request, SizeReadyCallback, Resou
       isCallingCallbacks = false;
     }
 
-    notifyLoadSuccess();
     GlideTrace.endSectionAsync(TAG, cookie);
   }
 
@@ -687,7 +688,9 @@ public final class SingleRequest<R> implements Request, SizeReadyCallback, Resou
       int logLevel = glideContext.getLogLevel();
       if (logLevel <= maxLogLevel) {
         Log.w(
-            GLIDE_TAG, "Load failed for " + model + " with size [" + width + "x" + height + "]", e);
+            GLIDE_TAG,
+            "Load failed for [" + model + "] with dimensions [" + width + "x" + height + "]",
+            e);
         if (logLevel <= Log.INFO) {
           e.logRootCauses(GLIDE_TAG);
         }
@@ -696,6 +699,8 @@ public final class SingleRequest<R> implements Request, SizeReadyCallback, Resou
       loadStatus = null;
       status = Status.FAILED;
       GlideDataProxy.proxyOnLoadFailed(this.hashCode(), model, target, width, height, e, startTime);
+
+      notifyRequestCoordinatorLoadFailed();
 
       isCallingCallbacks = true;
       try {
@@ -718,7 +723,6 @@ public final class SingleRequest<R> implements Request, SizeReadyCallback, Resou
         isCallingCallbacks = false;
       }
 
-      notifyLoadFailed();
       GlideTrace.endSectionAsync(TAG, cookie);
     }
   }

@@ -487,6 +487,18 @@ public final class GlideBuilder {
     return this;
   }
 
+  /**
+   * When given androidx Fragments and Activities, use {@link androidx.lifecycle.Lifecycle} to track
+   * the Activity or Fragment lifecycle instead of adding custom {@link
+   * com.bumptech.glide.manager.SupportRequestManagerFragment}s.
+   *
+   * <p>This flag is experimental and will be removed without notice in a future version.
+   */
+  public GlideBuilder useLifecycleInsteadOfInjectingFragments(boolean isEnabled) {
+    glideExperimentsBuilder.update(new UseLifecycleInsteadOfInjectingFragments(), isEnabled);
+    return this;
+  }
+
   void setRequestManagerFactory(@Nullable RequestManagerFactory factory) {
     this.requestManagerFactory = factory;
   }
@@ -591,7 +603,10 @@ public final class GlideBuilder {
     }
   }
 
-  /** See {@link #setWaitForFramesAfterTrimMemory(boolean)}. */
+  /**
+   * This is an internal only class that may be deleted at any time without notice. For internal
+   * users of glide, see the {@code setWaitForFramesAfterTrimMemory(boolean)} method above.
+   */
   public static final class WaitForFramesAfterTrimMemory implements Experiment {
     private WaitForFramesAfterTrimMemory() {}
   }
@@ -602,4 +617,10 @@ public final class GlideBuilder {
   public static final class LogRequestOrigins implements Experiment {}
 
   static final class EnableLazyGlideRegistry implements Experiment {}
+
+  /**
+   * Use the androidx lifecycle instead of injecting custom fragments when using androidx fragments
+   * and activities.
+   */
+  public static final class UseLifecycleInsteadOfInjectingFragments implements Experiment {}
 }

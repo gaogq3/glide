@@ -16,9 +16,20 @@ buildscript {
         if (!hasProperty('DISABLE_ERROR_PRONE')) {
             classpath "net.ltgt.gradle:gradle-errorprone-plugin:${ERROR_PRONE_PLUGIN_VERSION}"
         }
+        classpath 'com.guardsquare:proguard-gradle:7.1.0'
         classpath "se.bjurr.violations:violations-gradle-plugin:${VIOLATIONS_PLUGIN_VERSION}"
         classpath "androidx.benchmark:benchmark-gradle-plugin:${ANDROID_X_BENCHMARK_VERSION}"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${JETBRAINS_KOTLIN_VERSION}"
+        classpath "com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:$KSP_GRADLE_PLUGIN_VERSION"
+        classpath "org.jetbrains.kotlinx:binary-compatibility-validator:0.11.0"
     }
+}
+
+apply plugin: 'binary-compatibility-validator'
+
+apiValidation {
+    ignoredProjects += ["ksp", "test", "gallery"]
+    nonPublicMarkers += ["com.bumptech.glide.integration.ktx.InternalGlideApi"]
 }
 
 // See http://blog.joda.org/2014/02/turning-off-doclint-in-jdk-8-javadoc.html.
@@ -39,13 +50,19 @@ subprojects { project ->
             url "https://oss.sonatype.org/content/repositories/snapshots"
         }
         gradlePluginPortal()
+
+    }
+
+    afterEvaluate {
+        if (!project.plugins.hasPlugin("org.jetbrains.kotlin.jvm")) {
+            tasks.withType(JavaCompile) {
+                sourceCompatibility = 1.7
+                targetCompatibility = 1.7
+            }
+        }
     }
 
     tasks.withType(JavaCompile) {
-        sourceCompatibility = 1.7
-        targetCompatibility = 1.7
-
-        options.setBootstrapClasspath(files("${System.getProperty('java.home')}/lib/rt.jar"))
         // gifencoder is a legacy project that has a ton of warnings and is basically never
         // modified, so we're not going to worry about cleaning it up.
         // Imgur uses generated code from dagger that has warnings.
@@ -73,11 +90,6 @@ subprojects { project ->
                  * Disable deprecation warnings for ViewTarget/BaseTarget for now.
                  */ \
                 << "-Xlint:-deprecation"
-
-            if (project.plugins.hasPlugin('net.ltgt.errorprone')) {
-                // It's often useful to track individual objects when debugging object pooling.
-                options.compilerArgs << "-Xep:ObjectToString:OFF"
-            }
         }
     }
 
@@ -117,8 +129,8 @@ subprojects { project ->
     apply plugin: "se.bjurr.violations.violations-gradle-plugin"
 
     task violations(type: ViolationsTask) {
-        minSeverity 'INFO'
-        detailLevel 'VERBOSE'
+        minSeverity = 'INFO'
+        detailLevel = 'VERBOSE'
         maxViolations = 0
         diffMaxViolations = 0
 
@@ -132,21 +144,26 @@ subprojects { project ->
     }
 
     afterEvaluate {
-
         if (project.hasProperty("android")
                 && project.name != 'pmd' ) {
             android {
-                lintOptions {
+                lint {
                     warningsAsErrors true
                     quiet true
                     // Caught by the violations plugin.
                     abortOnError false
                 }
-            }
 
-            android.variantFilter { variant ->
-                if(variant.buildType.name == 'release') {
-                    variant.setIgnore(true)
+                buildFeatures {
+                    buildConfig = false
+                }
+
+                // Signing isn't relevant to a library. Our signing is done via
+                // a GPG key at upload time, there's no APK to sign.
+                buildTypes {
+                    release {
+                        signingConfig signingConfigs.debug
+                    }
                 }
             }
         }
@@ -154,13 +171,6 @@ subprojects { project ->
         if (project.tasks.findByName('check')) {
             check.dependsOn('checkstyle')
             check.finalizedBy violations
-        }
-
-
-        if (project.plugins.hasPlugin('com.android.library')) {
-            android.libraryVariants.all {
-                it.generateBuildConfigProvider.configure { enabled = false }
-            }
         }
     }
 }

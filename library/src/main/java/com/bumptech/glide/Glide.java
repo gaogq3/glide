@@ -14,7 +14,6 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
-import com.bumptech.glide.GlideBuilder.EnableLazyGlideRegistry;
 import com.bumptech.glide.load.DecodeFormat;
 import com.bumptech.glide.load.engine.Engine;
 import com.bumptech.glide.load.engine.bitmap_recycle.ArrayPool;
@@ -254,12 +253,6 @@ public class Glide implements ComponentCallbacks2 {
     }
     Glide glide = builder.build(applicationContext, manifestModules, annotationGeneratedModule);
     applicationContext.registerComponentCallbacks(glide);
-
-    // Trigger the registry initialization eagerly, similar to the codepath prior to the experiment.
-    if (!glide.getGlideContext().getExperiments().isEnabled(EnableLazyGlideRegistry.class)) {
-      glide.getGlideContext().getRegistry();
-    }
-
     Glide.glide = glide;
   }
 
@@ -550,8 +543,10 @@ public class Glide implements ComponentCallbacks2 {
    *
    * @param activity The activity to use.
    * @return A RequestManager for the given activity that can be used to start a load.
+   * @deprecated TODO(judds): Figure out the end state and list it here.
    */
   @NonNull
+  @Deprecated
   public static RequestManager with(@NonNull Activity activity) {
     return getRetriever(activity).get(activity);
   }

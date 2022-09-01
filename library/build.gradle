@@ -13,35 +13,52 @@ dependencies {
     api project(':third_party:disklrucache')
     api project(':annotation')
     api "androidx.fragment:fragment:${ANDROID_X_FRAGMENT_VERSION}"
-    api "androidx.vectordrawable:vectordrawable-animated:${ANDROID_X_VERSION}"
-    api "androidx.exifinterface:exifinterface:${EXIF_INTERFACE_VERSION}"
+    api "androidx.vectordrawable:vectordrawable-animated:${ANDROID_X_VECTOR_DRAWABLE_ANIMATED_VERSION}"
+    api "androidx.exifinterface:exifinterface:${ANDROID_X_EXIF_INTERFACE_VERSION}"
     api "androidx.tracing:tracing:${ANDROID_X_TRACING_VERSION}"
-    compileOnly "androidx.appcompat:appcompat:${ANDROID_X_VERSION}"
+    compileOnly "androidx.appcompat:appcompat:${ANDROID_X_APPCOMPAT_VERSION}"
 
     if (project.plugins.hasPlugin('net.ltgt.errorprone')) {
         errorprone "com.google.errorprone:error_prone_core:${ERROR_PRONE_VERSION}"
     }
 
-    testImplementation "androidx.appcompat:appcompat:${ANDROID_X_VERSION}"
+    testImplementation "androidx.appcompat:appcompat:${ANDROID_X_APPCOMPAT_VERSION}"
     testImplementation project(':testutil')
-    testImplementation 'com.google.guava:guava-testlib:18.0'
+    testImplementation "com.google.guava:guava-testlib:${GUAVA_TESTLIB_VERSION}"
     testImplementation "com.google.truth:truth:${TRUTH_VERSION}"
     testImplementation "junit:junit:${JUNIT_VERSION}"
     testImplementation "org.mockito:mockito-core:${MOCKITO_VERSION}"
     testImplementation "org.robolectric:robolectric:${ROBOLECTRIC_VERSION}"
     testImplementation "com.squareup.okhttp3:mockwebserver:${MOCKWEBSERVER_VERSION}"
-    testImplementation "androidx.legacy:legacy-support-v4:${ANDROID_X_VERSION}"
-    testImplementation "androidx.test:core:${ANDROID_X_TEST_VERSION}"
+    testImplementation "androidx.test:core:${ANDROID_X_TEST_CORE_VERSION}"
     testImplementation "androidx.test.ext:junit:${ANDROID_X_TEST_JUNIT_VERSION}"
-    testImplementation "androidx.test:runner:${ANDROID_X_TEST_VERSION}"
+    testImplementation "androidx.test:runner:${ANDROID_X_TEST_RUNNER_VERSION}"
+}
+
+if (project.plugins.hasPlugin('net.ltgt.errorprone')) {
+    tasks.withType(JavaCompile) {
+        options.errorprone.disable(
+            // It's often useful to track individual objects when debugging
+            // object pooling.
+            "ObjectToString",
+            // Doesn't apply when we can't use lambadas.
+            "UnnecessaryAnonymousClass",
+            // TODO(judds): Fix these and re-enable this check
+            "TypeNameShadowing",
+            "UndefinedEquals",
+            "UnnecessaryParentheses",
+            "UnusedVariable",
+            "EqualsGetClass",
+            "LockNotBeforeTry")
+    }
 }
 
 android {
-    compileSdkVersion COMPILE_SDK_VERSION as int
+    compileSdk COMPILE_SDK_VERSION as int
 
     defaultConfig {
-        minSdkVersion MIN_SDK_VERSION as int
-        targetSdkVersion TARGET_SDK_VERSION as int
+        minSdk MIN_SDK_VERSION as int
+        targetSdk TARGET_SDK_VERSION as int
         versionName VERSION_NAME as String
         consumerProguardFiles 'proguard-rules.txt'
     }
@@ -60,7 +77,6 @@ check.dependsOn(':library:test:check')
 def classPathForQuality() {
     return files(
             android.bootClasspath,
-            project.configurations.compile,
             project.android.libraryVariants.collect { it.javaCompile.classpath }
     )
 }

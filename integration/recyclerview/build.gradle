@@ -2,16 +2,16 @@ apply plugin: 'com.android.library'
 
 dependencies {
     implementation project(':library')
-    compileOnly "androidx.recyclerview:recyclerview:${ANDROID_X_VERSION}"
+    compileOnly "androidx.recyclerview:recyclerview:${ANDROID_X_RECYCLERVIEW_VERSION}"
     compileOnly "androidx.fragment:fragment:${ANDROID_X_FRAGMENT_VERSION}"
 }
 
 android {
-    compileSdkVersion COMPILE_SDK_VERSION as int
+    compileSdk COMPILE_SDK_VERSION as int
 
     defaultConfig {
-        minSdkVersion MIN_SDK_VERSION as int
-        targetSdkVersion TARGET_SDK_VERSION as int
+        minSdk MIN_SDK_VERSION as int
+        targetSdk TARGET_SDK_VERSION as int
 
         versionName VERSION_NAME as String
     }

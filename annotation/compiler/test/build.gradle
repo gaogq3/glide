@@ -1,5 +1,3 @@
-import org.gradle.internal.jvm.Jvm
-
 apply plugin: 'com.android.library'
 
 android {
@@ -25,15 +23,15 @@ android {
 
 afterEvaluate {
     lint.enabled = false
-    compileDebugJavaWithJavac.enabled = false
+    compileReleaseJavaWithJavac.enabled = false
 }
 
 android {
-    compileSdkVersion COMPILE_SDK_VERSION as int
+    compileSdk COMPILE_SDK_VERSION as int
 
     defaultConfig {
-        minSdkVersion MIN_SDK_VERSION as int
-        targetSdkVersion TARGET_SDK_VERSION as int
+        minSdk MIN_SDK_VERSION as int
+        targetSdk TARGET_SDK_VERSION as int
         versionName VERSION_NAME as String
     }
 
@@ -72,9 +70,8 @@ dependencies {
     }
     testImplementation "androidx.annotation:annotation:${ANDROID_X_ANNOTATION_VERSION}"
     testImplementation "androidx.fragment:fragment:${ANDROID_X_FRAGMENT_VERSION}"
-    testImplementation "androidx.legacy:legacy-support-v4:${ANDROID_X_VERSION}"
-    // TODO: this seems excessive, but it works...
-    testImplementation files(Jvm.current().getJre().homeDir.getAbsolutePath()+'/lib/rt.jar')
+    // TODO: Find some way to include a similar dependency on java 9+ and re-enable these tests in gradle.
+//    testImplementation files(Jvm.current().getJre().homeDir.getAbsolutePath()+'/lib/rt.jar')
 
     testAnnotationProcessor project(':annotation:compiler')
     testAnnotationProcessor "com.google.auto.service:auto-service:${AUTO_SERVICE_VERSION}"
@@ -95,6 +92,6 @@ task regenerateTestResources {
 }
 
 afterEvaluate {
-    regenerateTestResources.finalizedBy(testDebugUnitTest)
+    regenerateTestResources.finalizedBy(testReleaseUnitTest)
 }
 
